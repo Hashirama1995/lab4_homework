@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Lean;
 
 public class SpawnedObject : MonoBehaviour
 {
@@ -25,7 +26,7 @@ public class SpawnedObject : MonoBehaviour
             }
         }
     }
-
+    
     public string Description
     {
         get
@@ -39,10 +40,42 @@ public class SpawnedObject : MonoBehaviour
         _number = number;
     }
 
-    private void OnCollisionEnter(Collision collision)
+
+    public void ForceMove(Vector2 dir)
     {
-        if(collision.gameObject.tag == "SpawnedObject")
+        Rigidbody rg = this.GetComponent<Rigidbody>();
+        this.GetComponent<Rigidbody>().AddForce(dir.x, dir.y, 0 , ForceMode.VelocityChange);
+        this.GetComponent<Rigidbody>().AddForce(10, 10, 10 ,ForceMode.Force);
+        this.GetComponent<Rigidbody>().AddForce(10, 10, 10, ForceMode.Acceleration);
+        Debug.Log("WWW SWIPE " + "X: "+ dir.x +" Y: "+ dir.y);
+        Debug.Log("WWW SWIPE VELOC " +rg.velocity);
+        
+
+    }
+
+
+    public void OnTriggerEnter(Collider other)
+    {
+        Debug.Log("WWW Triger");
+        if (other.gameObject.tag == "SpawnedObject")
         {
+            Debug.Log("WWW Triger SpawnedObject");
+            Debug.Log("WWW VELO =  " +other.GetComponent<Rigidbody>().velocity.magnitude);
+
+            if (other.GetComponent<Collision>().relativeVelocity.magnitude > 2)
+            {
+                Debug.Log("WWW Triger VELOCITY");
+                itsTimeToDie = true;
+                other.gameObject.GetComponent<SpawnedObject>().itsTimeToDie = true;
+            }
+        }
+    }
+    public void OnCollisionEnter(Collision collision)
+    {
+        Debug.Log("WWW COLLISION");
+        if (collision.gameObject.tag == "SpawnedObject")
+        {
+            Debug.Log("WWW COLLISION SpawnedObject");
             if (collision.relativeVelocity.magnitude > 2)
             {
                 itsTimeToDie = true;

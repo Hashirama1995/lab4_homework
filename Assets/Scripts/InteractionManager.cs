@@ -46,7 +46,11 @@ public class InteractionManager : MonoBehaviour
 
     private void Start()
     {
-        // Create target marker
+        // Create target marker LeanTouch
+
+        //Rigidbody rg;
+        //rg.AddForce(Vector3.forward * 15.0f, ForceMode.Impulse);
+
         _targetMarker = Instantiate(
             original: _targetMarkerPrehab,
             position: Vector3.zero,
@@ -108,7 +112,7 @@ public class InteractionManager : MonoBehaviour
                         // try to select object, if it wasn't possible, try to move it
                         if (!ProcessTouchSelectObject(touch1, isOverUI))
                         {
-                            MoveSelectedObject(touch1);
+                            //MoveSelectedObject(touch1);
                             touchPos1 = Vector2.zero;
                             touchPos2 = Vector2.zero;
                         }
@@ -128,8 +132,6 @@ public class InteractionManager : MonoBehaviour
 
     private void Zoom()
     {
-        touchPos1 = Input.GetTouch(0).position;
-        touchPos2 = Input.GetTouch(1).position;
         if (touchPos1 == Vector2.zero && touchPos2 == Vector2.zero)
 
         {
@@ -144,9 +146,9 @@ public class InteractionManager : MonoBehaviour
         Vector2 f1position = Input.GetTouch(1).position;
 
         float dir = Mathf.Sign(Vector2.Distance(touchPos2, touchPos1) - Vector2.Distance(f0position, f1position));
-
-        transform.position = Vector3.MoveTowards(transform.position, transform.position + transform.forward, dir * sensitivity * Time.deltaTime * Vector3.Distance(f0position, f1position));
-
+        float sens = 0.01f;
+        _selectedObject.transform.localScale = new Vector3(_selectedObject.transform.localScale.x + dir* sens, _selectedObject.transform.localScale.y + dir * sens, _selectedObject.transform.localScale.z + dir * sens);
+      
         _selectedObject.GetComponent<Rigidbody>().mass += 1*sensitivity * dir;
     }
 
