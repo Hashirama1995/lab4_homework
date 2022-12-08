@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Lean;
+using System;
 
 public class SpawnedObject : MonoBehaviour
 {
@@ -10,8 +11,17 @@ public class SpawnedObject : MonoBehaviour
 
     private int _number = -1;
 
+    public InteractionManager Manager;
     public float transparency = 1.0f;
     public bool itsTimeToDie = false;
+
+    public int ID;
+
+    private GameObject another;
+    public bool forceMoveBool = false;
+    private Rigidbody rg;
+    private MeshRenderer mr;
+    private Vector2 dir;
     public string Name
     {
         get
@@ -40,17 +50,45 @@ public class SpawnedObject : MonoBehaviour
         _number = number;
     }
 
-
-    public void ForceMove(Vector2 dir)
+    private void Awake()
     {
-        Rigidbody rg = this.GetComponent<Rigidbody>();
-        this.GetComponent<Rigidbody>().AddForce(dir.x, dir.y, 0 , ForceMode.VelocityChange);
-        this.GetComponent<Rigidbody>().AddForce(10, 10, 10 ,ForceMode.Force);
-        this.GetComponent<Rigidbody>().AddForce(10, 10, 10, ForceMode.Acceleration);
-        Debug.Log("WWW SWIPE " + "X: "+ dir.x +" Y: "+ dir.y);
-        Debug.Log("WWW SWIPE VELOC " +rg.velocity);
-        
+        rg = GetComponent<Rigidbody>();
+        mr = GetComponent<MeshRenderer>();
+    }
 
+    private void OnEnable()
+    {
+        Lean.Touch.LeanTouch.OnFingerSwipe += OnSwiped;
+    }
+
+    private void OnDisable()
+    {
+        Lean.Touch.LeanTouch.OnFingerSwipe -= OnSwiped;
+    }
+
+    private void OnSwiped(Lean.Touch.LeanFinger finger)
+    {
+        Debug.Log("WWW MANAGER SELECTED:" + Manager.SelectedObject.GetComponent<SpawnedObject>().ID);
+        Debug.Log("WWW THIS:" + this.gameObject.GetComponent<SpawnedObject>().ID);
+        if (Manager.SelectedObject.GetComponent<SpawnedObject>().ID != this.gameObject.GetComponent<SpawnedObject>().ID)
+            return;
+
+        Vector2 temp = finger.ScreenPosition - finger.StartScreenPosition;
+        Debug.Log("WWW ATTENTION !!!! SWIPE " + "X: " + temp.x + " Y: " + temp.y);
+
+        try
+        {
+            rg.AddForce(temp.x, temp.y, 0, ForceMode.Impulse);
+        }
+        catch (Exception ex)
+        {
+            Debug.Log("WWW" + ex.ToString());
+            // some code that handles the exception
+            throw ex;
+        }
+
+        Debug.Log("WWW SWIPE VELOC " + rg.velocity);
+        Debug.Log("WWW SWIPE VELOC mafg " + rg.velocity.magnitude*100);
     }
 
 
@@ -73,26 +111,35 @@ public class SpawnedObject : MonoBehaviour
     public void OnCollisionEnter(Collision collision)
     {
         Debug.Log("WWW COLLISION");
-        if (collision.gameObject.tag == "SpawnedObject")
+        if (collision.gameObject.tag == "SpawnedObject" && !itsTimeToDie)
         {
             Debug.Log("WWW COLLISION SpawnedObject");
-            if (collision.relativeVelocity.magnitude > 2)
-            {
+            if(rg.velocity.magnitude > 0.0001) {
+                Debug.Log("WWW its TIME TO DIE");
                 itsTimeToDie = true;
                 collision.gameObject.GetComponent<SpawnedObject>().itsTimeToDie = true;
             }
         }
     }
 
-    private void ChengeTransparency(Material mat, float currentTransparency)
+    Material ChengeTransparency(Material mat, float currentTransparency)
     {
+        Material newMat = new Material(mat);
         Color oldColor = mat.color;
         Color newColor = new Color(oldColor.r, oldColor.g, oldColor.b, currentTransparency);
-        mat.SetColor("_Color", newColor);
+        newMat.color = newColor;
+        Debug.Log("current transparency = " + currentTransparency);
+        return newMat;
     }
+
 
     // Start is called before the first frame update
     void Start()
+    {
+        
+    }
+
+    private void FixedUpdate()
     {
         
     }
@@ -102,13 +149,12 @@ public class SpawnedObject : MonoBehaviour
     {
         if(itsTimeToDie)
         {
-            transparency -= 0.01f;
-            ChengeTransparency(this.GetComponent<Renderer>().material, transparency);
-
-            if (transparency < 0.02f)
+            transparency = transparency - 0.01f;
+            Debug.Log("   R: " + mr.material.color.r + "   G: " + mr.material.color.g + "  B: " + mr.material.color.b + " A :" + mr.material.color.a);
+            mr.material.color = new Color(mr.material.color.r, mr.material.color.g, mr.material.color.b, transparency);
+            if (transparency < 0.01f)
             {
-                Destroy(this);
-                transparency = 1.0f;
+                Destroy(gameObject);
             }
         }
     }

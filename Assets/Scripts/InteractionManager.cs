@@ -29,6 +29,14 @@ public class InteractionManager : MonoBehaviour
     private GameObject _targetMarker;
     private GameObject _selectedObject;
 
+    public GameObject SelectedObject
+    {
+        get
+        {
+            return _selectedObject;
+        }
+    }
+
     Vector2 touchPos1;
     Vector2 touchPos2;
     public float sensitivity = 1;
@@ -284,6 +292,8 @@ public class InteractionManager : MonoBehaviour
             throw new MissingComponentException(spObj.GetType().Name + " component not found!");
 
         spObj.GiveNumber(++_spawnedObjectCount);
+        spObj.Manager = this;
+        spObj.ID = _spawnedObjectCount - 1;
     }
 
     private void InitializeDefaultScreen()
